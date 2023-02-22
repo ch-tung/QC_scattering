@@ -18,7 +18,8 @@ Atomic packing associated with the above 3D quasicrystal is rendered by [OVITO](
 ![](https://i.imgur.com/MGdPwu4.jpg)
 
 `test_plot_scattering.ipynb`: Demonstrate the scattering function from previously generated QC model
-![](https://i.imgur.com/ZDCkRuA.png)
+![](https://i.imgur.com/EMOQazi.png)
+
 
 
 
