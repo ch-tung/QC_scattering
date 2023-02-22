@@ -9,11 +9,11 @@ cd /work1/u6666666/QC_scattering/MgZn_DQC
 
 #OMP_NUM_THREADS=1
 
-echo "Your job starts at Tue Feb 21 20:45:20 CST 2023"
+echo "Your job starts at Wed Feb 22 12:06:21 CST 2023"
 
 module load intel/2018_u1
-mpiexec -np 1 soq_mpi_fftv3 < in.soq_c_rod
+mpiexec -np 1 soq_mpi_fftv3_mod < in.soq_c_rod
 wait
 
-echo "Your job ended at  Tue Feb 21 20:45:20 CST 2023 "
+echo "Your job ended at  Wed Feb 22 12:06:21 CST 2023 "
 
