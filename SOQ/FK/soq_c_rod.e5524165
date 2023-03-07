@@ -1,0 +1,25 @@
+Your job starts at Wed Mar  8 01:08:13 CST 2023
+# dumpStep 1
+# endStep 0
+# breakStep 0
+# initStep 0
+# dt 0.010000
+# directory ./
+# nTypes 3
+# types  0 1 2
+# nBins 1600
+# dBins 0.025000
+# nStep 1
+# MPI threads 4
+# Frames/mpi thread 1
+# nAtom: 480000
+# pbcl: { 38.637032, 38.637032 40.000000 }
+# dBins: 0.025000
+# nBins: 1600
+# nSol: 480000
+# Calculating S(q) for rank:0 and step 0
+# Done calculating S(q) for rank:0 and step 0
+# Done calculating S(q)
+# Done printing S(q)
+# total_time 5.620000
+Your job ended at  Wed Mar  8 01:08:13 CST 2023 
