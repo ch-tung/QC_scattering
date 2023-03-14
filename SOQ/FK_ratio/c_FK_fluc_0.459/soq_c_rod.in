@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -P MST111235
+#PBS -N soq_c_rod
+#PBS -l select=1:ncpus=4:mpiprocs=4
+#PBS -q cf40
+#PBS -j eo 
+
+cd /work1/u6666666/QC_scattering/FK_ratio/c_FK_fluc_0.459
+
+#OMP_NUM_THREADS=1
+
+echo "Your job starts at Wed Mar 15 01:06:29 CST 2023"
+
+module load intel/2018_u1
+mpiexec -np 4 soq_mpi_fftv3_mod < in.soq_c_rod
+wait
+
+echo "Your job ended at  Wed Mar 15 01:06:29 CST 2023 "
+
