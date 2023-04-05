@@ -555,3 +555,96 @@ def c_FK_B(nx,ny,Ratio_ca=1.9):
     c_wht, c_blu, c_ylw = stack_coords(c_unit_cells)
     
     return c_wht, c_blu, c_ylw
+
+# -------------------------------------------------
+# FK A15 phase
+
+def c_A15_unit(origin,Ratio_ca=1.9,PBC=False):
+    c_SQ1 = unitcell_SQ([0,0,0],0.0,ratio_ca=Ratio_ca)
+    
+    c_wht, c_blu, c_ylw = stack_coords([c_SQ1])
+    
+    R_c = 1
+    R_s = 0
+    R = np.array([[R_c,-R_s,0],
+                  [R_s,R_c,0],
+                  [0,0,1]])
+    c_wht = np.array([R@c for c in c_wht])
+    c_blu = np.array([R@c for c in c_blu])
+    c_ylw = np.array([R@c for c in c_ylw])
+    
+    if PBC:
+        sigma = 1e-6
+        i_c_wht = (c_wht[:,0]>sigma) & (c_wht[:,1]<1-sigma)
+        c_wht = c_wht[i_c_wht]
+        i_c_blu = (c_blu[:,0]>sigma) & (c_blu[:,1]<1-sigma) & (c_blu[:,2]>sigma)
+        c_blu = c_blu[i_c_blu]
+        i_c_ylw = (c_ylw[:,0]>sigma) & (c_ylw[:,1]<1-sigma)
+        c_ylw = c_ylw[i_c_ylw]
+        
+    c_wht = c_wht + origin
+    c_blu = c_blu + origin
+    c_ylw = c_ylw + origin
+    
+    return c_wht, c_blu, c_ylw
+
+def c_A15(nx,ny,Ratio_ca=1.9):
+    shift_x = np.array([1,0,0])
+    shift_y = np.array([0,1,0])
+    c_unit_cells = []
+    for i in range(nx):
+        for j in range(ny):
+            origin_ij = shift_x*i+shift_y*j
+            c_unit_cells.append(c_A15_unit(origin_ij,Ratio_ca,PBC=True))
+    c_wht, c_blu, c_ylw = stack_coords(c_unit_cells)
+    
+    return c_wht, c_blu, c_ylw
+
+# -------------------------------------------------
+# FK Z phase
+
+def c_Z_unit(origin,Ratio_ca=1.9,PBC=False):
+    c_TR1_1 = unitcell_TR1([0,np.sqrt(3)/2,0],0,ratio_ca=Ratio_ca)
+    c_TR1_2 = unitcell_TR1([0,np.sqrt(3)/2,0]+np.array([1,0,0]),1/3*np.pi,ratio_ca=Ratio_ca)
+    c_TR1_3 = unitcell_TR1([0,np.sqrt(3)/2,0],1/3*np.pi,ratio_ca=Ratio_ca)
+    c_TR1_4 = unitcell_TR1([0,np.sqrt(3)/2,0],-1/3*np.pi,ratio_ca=Ratio_ca)
+    c_TR1_5 = unitcell_TR1([0,np.sqrt(3)/2,0],-2/3*np.pi,ratio_ca=Ratio_ca)
+    c_TR1_6 = unitcell_TR1([0,np.sqrt(3)/2,0]+np.array([1,0,0]),-2/3*np.pi,ratio_ca=Ratio_ca)
+    
+    c_wht, c_blu, c_ylw = stack_coords([c_TR1_1,c_TR1_2,c_TR1_3,c_TR1_4,c_TR1_5,c_TR1_6])
+    
+    R_c = 1
+    R_s = 0
+    R = np.array([[R_c,-R_s,0],
+                  [R_s,R_c,0],
+                  [0,0,1]])
+    c_wht = np.array([R@c for c in c_wht])
+    c_blu = np.array([R@c for c in c_blu])
+    c_ylw = np.array([R@c for c in c_ylw])
+    
+    if PBC:
+        sigma = 1e-6
+        i_c_wht = (c_wht[:,0]>sigma) & (c_wht[:,0]<1+sigma) & (c_wht[:,1]<np.sqrt(3)+sigma) & (c_wht[:,1]>sigma)
+        c_wht = c_wht[i_c_wht]
+        i_c_blu = (c_blu[:,0]>sigma) & (c_blu[:,0]<1+sigma) & (c_blu[:,1]<np.sqrt(3)+sigma) & (c_blu[:,1]>sigma) & (c_blu[:,2]>sigma)
+        c_blu = c_blu[i_c_blu]
+        i_c_ylw = (c_ylw[:,0]>sigma) & (c_ylw[:,0]<1+sigma) & (c_ylw[:,1]<np.sqrt(3)+sigma) & (c_ylw[:,1]>sigma)
+        c_ylw = c_ylw[i_c_ylw]
+        
+    c_wht = c_wht + origin
+    c_blu = c_blu + origin
+    c_ylw = c_ylw + origin
+    
+    return c_wht, c_blu, c_ylw
+
+def c_Z(nx,ny,Ratio_ca=1.9):
+    shift_x = np.array([1,0,0])
+    shift_y = np.array([0,1,0])*np.sqrt(3)
+    c_unit_cells = []
+    for i in range(nx):
+        for j in range(ny):
+            origin_ij = shift_x*i+shift_y*j
+            c_unit_cells.append(c_Z_unit(origin_ij,Ratio_ca,PBC=True))
+    c_wht, c_blu, c_ylw = stack_coords(c_unit_cells)
+    
+    return c_wht, c_blu, c_ylw
