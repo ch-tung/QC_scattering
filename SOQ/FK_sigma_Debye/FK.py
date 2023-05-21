@@ -1,5 +1,4 @@
 import numpy as np
-from numba import njit, prange
 
 def Create_dump(c,filename,boundary=False,periodic=False):
     n_type = len(c)
@@ -651,100 +650,6 @@ def c_Z(nx,ny,Ratio_ca=1.9):
     return c_wht, c_blu, c_ylw
 
 # =================================================
-# Other structures
-def unitcell_FCC(origin=[0,0,0], orientation=0):
-    '''
-    Generate rhombus unit cell
-    origin: origin of unitcell, 3*1 array
-    orientation: orientation of unitcell, 
-                 represented by polar angle of the long diagonl, float
-    
-    returns: cH = [cH_wht,cH_blu,cH_ylw], lists of coordinates of the 3 types of particles
-    '''
-    l = 1
-        
-    R = np.array([[np.cos(orientation),-np.sin(orientation),0],
-                  [np.sin(orientation), np.cos(orientation),0],
-                  [0,0,1]])
-
-    # place atoms
-    c_unit = np.array([[0,0,0],[0,0.5,0.5],[0.5,0,0.5],[0.5,0.5,0]])
-
-    c_unit = np.array([R@c for c in c_unit])+origin
-
-    return c_unit
-
-def unitcell_BCC(origin=[0,0,0], orientation=0):
-    '''
-    Generate rhombus unit cell
-    origin: origin of unitcell, 3*1 array
-    orientation: orientation of unitcell, 
-                 represented by polar angle of the long diagonl, float
-    
-    returns: cH = [cH_wht,cH_blu,cH_ylw], lists of coordinates of the 3 types of particles
-    '''
-    l = 1
-        
-    R = np.array([[np.cos(orientation),-np.sin(orientation),0],
-                  [np.sin(orientation), np.cos(orientation),0],
-                  [0,0,1]])
-
-    # place atoms
-    c_unit = np.array([[0,0,0],[0.5,0.5,0.5]])
-
-    c_unit = np.array([R@c for c in c_unit])+origin
-
-    return c_unit
-
-def unitcell_SC(origin=[0,0,0], orientation=0):
-    '''
-    Generate rhombus unit cell
-    origin: origin of unitcell, 3*1 array
-    orientation: orientation of unitcell, 
-                 represented by polar angle of the long diagonl, float
-    
-    returns: cH = [cH_wht,cH_blu,cH_ylw], lists of coordinates of the 3 types of particles
-    '''
-    l = 1
-        
-    R = np.array([[np.cos(orientation),-np.sin(orientation),0],
-                  [np.sin(orientation), np.cos(orientation),0],
-                  [0,0,1]])
-
-    # place atoms
-    c_unit = np.array([[0,0,0]])
-
-    c_unit = np.array([R@c for c in c_unit])+origin
-
-    return c_unit
-
-def unitcell_HCP(origin=[0,0,0], orientation=0, r_ca=np.sqrt(8/3)):
-    '''
-    Generate rhombus unit cell
-    origin: origin of unitcell, 3*1 array
-    orientation: orientation of unitcell, 
-                 represented by polar angle of the long diagonl, float
-    
-    returns: cH = [cH_wht,cH_blu,cH_ylw], lists of coordinates of the 3 types of particles
-    '''
-    l_0 = 1
-    l_1 = np.sqrt(3)
-    l_2 = r_ca
-    
-    l = np.array([l_0,l_1,l_2])
-        
-    R = np.array([[np.cos(orientation),-np.sin(orientation),0],
-                  [np.sin(orientation), np.cos(orientation),0],
-                  [0,0,1]])
-
-    # place atoms
-    c_p = np.array([[0,0,0],[1/2,1/2,0],[0,1/3,1/2],[1/2,5/6,1/2]])
-    c_unit = np.array([l*c for c in c_p])
-    c_unit = np.array([R@c for c in c_unit])+origin
-
-    return c_unit
-
-# =================================================
 # tile
 def tile_TR1(origin, orientation, ratio_ca=np.sqrt((1+np.sqrt(3)/2)**2+0.5**2)):
     '''
@@ -957,7 +862,6 @@ def tile_Z(nx,ny,Ratio_ca=1.9):
 # =====================================================
 # Calculate S(Q)
 
-@njit
 def scatter_histo(c, qq, p_sub=1.0, n_bins=1000):
     """
     Calculate scattering function.
@@ -967,6 +871,7 @@ def scatter_histo(c, qq, p_sub=1.0, n_bins=1000):
         qq: array
             wave vectors
         p_sub: amount of particles used to calculate S(Q)
+        n_bins: amount of rdf histogram bins
     """
 
     N = c.shape[1]
@@ -976,167 +881,17 @@ def scatter_histo(c, qq, p_sub=1.0, n_bins=1000):
     i_list = np.random.choice(np.arange(N), size=n_list)
     r_jk = c[:,i_list].T.reshape(n_list,1,3) - c[:,i_list].T.reshape(1,n_list,3)
     d_jk = np.sqrt(np.sum(r_jk**2,axis=2))
-    r_jk = None
 
-    # RDF
     d_max = np.max(d_jk)
     rr = np.linspace(d_max/n_bins,d_max,n_bins)
-    rho_r = np.zeros(n_bins)
-    
-    index_r_jk = np.floor(d_jk/d_max*n_bins) -1
-    d_jk = None
-    np.fill_diagonal(index_r_jk,n_bins*2) # we are not calculating these pairs
-    index_f = index_r_jk.flatten()
-    index_r_jk = None
-    index_f = index_f[index_f!=(n_bins*2)]
-    
-    for i_r in range(len(index_f)):
-        rho_r[int(index_f[i_r])] += 1
-    
-#     for i_r in tqdm(range(n_bins)):
-#         rho_r[i_r] = np.sum(index_r_jk==i_r)
 
-    S_q = np.array([np.sum(rho_r*np.sin(rr*q)/(rr*q)) for q in qq])/N + 1
+    index_r_jk = np.floor(d_jk/d_max*n_bins)
+    np.fill_diagonal(index_r_jk,n_bins*2) # we are not calculating these pairs
+    
+    rho_r = np.zeros(n_bins)
+    for i_r in range(n_bins):
+        rho_r[i_r] = np.sum(index_r_jk==i_r)
+
+    S_q = np.array([np.sum(rho_r*np.sin(rr*q)/(rr*q)) for q in qq])/N/2
     
     return S_q
-
-# ======================================================
-# Strain energy
-def area_vertices(vertices):
-    f_cm = np.mean(vertices,axis=0)
-    vertices = vertices - f_cm
-    i_1 = np.arange(len(vertices))
-    i_2 = (i_1+1)%len(i_1)
-    A = [np.cross(vertices[i_1[j]],vertices[i_2[j]]) for j in range(len(i_1))]
-    area = np.linalg.norm(np.sum(A,axis=0)/2)
-    return area
-
-def sphere_sample(n):
-    samples = []
-    for i in range(n):
-        v = [0, 0, 0]  # initialize so we go into the while loop
-
-        while np.linalg.norm(v) < .0001:
-            x = np.random.normal()  # random standard normal
-            y = np.random.normal()
-            z = np.random.normal()
-            v = np.array([x, y, z])
-
-        v = v/np.linalg.norm(v)  # normalize to unit norm
-        
-        samples.append(v)
-        
-    return np.array(samples)
-
-def isinside(v, vt_polygon):
-    len_vt = len(vt_polygon)
-    list_inside = [np.dot(v,np.cross(vt_polygon[i],vt_polygon[(i+1)%len_vt]))<=0
-               for i in range(len_vt)]
-    return np.all(list_inside) 
-
-def elastic_energy(Faces, Vertices, Vect_sample, fraction = 0.5, elas_const = 1.0):
-    n_sample = len(Vect_sample)
-    # volume of uniformly distributed, undeformed sphere
-    radius_sphere = (1/(4/3*np.pi))**(1/3)
-    r_OS = radius_sphere
-    r_OI = r_OS*fraction
-    r_IS = r_OS-r_OI
-    
-    E = 0
-    r = 0
-    # iterate over facets
-    for i_faces, face in enumerate(Faces):
-        vt_sf_list = Vertices[face['vertices']].tolist()
-        vt_if_list = (Vertices[face['vertices']]*fraction).tolist() # interface position
-
-        v0 = np.array(vt_sf_list[0])
-        v1 = np.array(vt_sf_list[1])
-        v2 = np.array(vt_sf_list[2])
-        v0_i = np.array(vt_if_list[0])
-
-        n_sf = np.cross((v1-v0),
-                        (v1-v2))
-        n_sf = n_sf/np.linalg.norm(n_sf)
-
-        index_inside = [isinside(v,vt_sf_list) for v in Vect_sample]
-        vect_inside = Vect_sample[index_inside]
-
-        for vect in vect_inside:
-            d_OS = np.abs(np.dot(v0,n_sf)/np.dot(vect,n_sf))
-            d_OI = np.abs(np.dot(v0_i,n_sf)/np.dot(vect,n_sf))
-            d_IS = d_OS-d_OI
-
-            stretch_OI = d_OI-r_OI
-            stretch_IS = d_IS-r_IS
-
-            E += elas_const*(stretch_OI**2)/2 + elas_const*(stretch_IS**2)/2
-            r += d_OS
-
-    return E/n_sample, r/n_sample
-
-def energy_coords(c, n_sample = 2000, f = 0.5, Ek = 1.0):
-    # Call pyvoro.compute_voronoi function to evaluate the Voronoi tessellations
-    voro = pyvoro.compute_voronoi(points,bounds,0.7,periodic=[True]*3)
-
-    list_origin = [v['original'] for v in voro]
-    list_volume = [v['volume'] for v in voro]
-    list_volume_round = [np.round(v['volume'],decimals=9) for v in voro]
-    list_vertices = [v['vertices'] for v in voro]
-    list_adjacency = [v['adjacency'] for v in voro]
-    list_faces = [v['faces'] for v in voro]
-    list_coords = [len(v['faces']) for v in voro]
-
-    # Pick up the unique elements from the list of Voronoi cell volume
-    unique_volume, inices, counts = np.unique(list_volume_round,return_counts=True,return_index=True)
-    unique_volume_reduced = unique_volume*np.sum(counts)/np.sum(counts*unique_volume)
-    unique_adjacency = np.array(list_coords)[inices]
-
-    # Isoperimetric quotient (IQ)
-    unique_IQ = []
-    for i_cell in range(len(unique_volume)):
-        vertices = np.array(list_vertices[inices.tolist()[i_cell]])
-        v_cm = np.mean(vertices,axis=0)
-        vertices = vertices-v_cm
-        faces = list_faces[inices.tolist()[i_cell]]
-
-        area_sum = 0
-        for i_faces, face in enumerate(faces):
-            vertices_face_list = vertices[face['vertices']].tolist()
-            area = area_vertices(vertices_face_list)
-            area_sum += area
-
-        unique_IQ.append(36*np.pi*unique_volume[i_cell]**2/area_sum**3)
-
-    IQ_arr_i = np.array(unique_IQ)
-    IQ_arr.append(IQ_arr_i)
-    counts_arr.append(counts)
-    volume_arr.append(unique_volume_reduced)
-
-    # scale the unitcell volume such that the averaged Voronoi cell volume = 1
-    unit_cell_volume = np.sum(counts*unique_volume)
-    volume_ratio = np.sum(counts)/unit_cell_volume
-    size_ratio = volume_ratio**(1/3)
-
-    # material dependent parameters
-    f = 0.5 # fraction of core segment
-    Ek = 1.0 # elastic constant
-
-    # elastic strain energy
-    E_arr_i = []
-    r_arr_i = []
-    for i_cell in range(len(unique_volume)):
-        # randomly generated radial vectors
-        n_sample = 2000
-        vect_sample = sphere_sample(n_sample)
-
-        # vertices of Voronoi cell
-        vertices = np.array(list_vertices[inices.tolist()[i_cell]])*size_ratio
-        v_cm = np.mean(vertices,axis=0)
-        vertices = vertices-v_cm
-        faces = list_faces[inices.tolist()[i_cell]]
-
-        E, r = elastic_energy(Faces=faces, Vertices=vertices, Vect_sample=vect_sample)
-        E_arr_i.append(E)      
-        r_arr_i.append(r)   
-        
-    return E_arr_i, IQ_arr_i

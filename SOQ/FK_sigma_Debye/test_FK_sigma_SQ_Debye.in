@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -P MST111235
+#PBS -N test_FK_sigma_SQ_Debye
+#PBS -l select=1:ncpus=4:mpiprocs=4
+#PBS -q cf40
+#PBS -j eo 
+
+cd /work1/u6666666/QC_scattering/FK_sigma_Debye
+
+#OMP_NUM_THREADS=1
+
+echo "Your job starts at Fri May 19 00:05:31 CST 2023"
+
+module purge 
+module load anaconda3/5.1.10
+module load intel/2018_u1
+
+source activate /home/u6666666/condapy3
+python ./test_FK_sigma_SQ_Debye.py
+source deactivate
+wait
+
+echo "Your job ended at  Fri May 19 00:05:31 CST 2023 "
+
