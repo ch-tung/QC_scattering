@@ -11,7 +11,7 @@ This project evaluates the scattering function of FK sigma phase based on user i
 
 ## Usage
 
-1. Run FK_sigma_Debye.exe.
+1. Run FK_sigma_Debye.exe or `python .\start.py ` (if using source code).
 
 2. The application window will appear with input fields and buttons.
 
