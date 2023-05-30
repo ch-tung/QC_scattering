@@ -7,7 +7,7 @@ https://osf.io/7qkt4/?view_only=f0e66d958c3a40729ac465c42d3dc27f
 
 ## Description
 
-This project calculates and evaluates the scattering function of FK sigma phase based on user inputs. The scattering function is computed using two-point correlation and radial distribution function (RDF) calculations. The resulting scattering function is then plotted and saved as an output.
+This project evaluates the scattering function of FK sigma phase based on user inputs. The scattering function is computed using two-point correlation and accelerated by radial distribution function (RDF) binning. The resulting scattering function is then plotted and saved as an output.
 
 ## Usage
 
