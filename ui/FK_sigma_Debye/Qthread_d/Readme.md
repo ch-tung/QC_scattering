@@ -22,7 +22,7 @@ This project evaluates the scattering function of FK sigma phase based on user i
    - `filepath`: path to save the output files
    - `d_c`: interplanar spacing value
 
-4. Click the "Start" button to initiate the calculation and evaluation of the scattering function.
+4. Click the "Start" button to initiate the evaluation of the scattering function.
 
 5. Check the desired options in the UI to display specific scattering peaks.
 
