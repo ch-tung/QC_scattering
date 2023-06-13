@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# from numba import njit, prange
 
 def Create_dump(c,filename,boundary=False,periodic=False):
     n_type = len(c)
@@ -194,8 +194,7 @@ def unitcell_SQ(origin, orientation, ratio_ca=np.sqrt((1+np.sqrt(3)/2)**2+0.5**2
     # blue sites
     cSQ_blu = []
     for z in [0,1]:
-        # f_edge_b = np.array([[0.5,0],[0.25,0.5],[0.75,0.5],[0.5,1]])
-        f_edge_b = np.array([[0.5,0],[0.5-1/np.sqrt(12),0.5],[0.5+1/np.sqrt(12),0.5],[0.5,1]])
+        f_edge_b = np.array([[0.5,0],[0.25,0.5],[0.75,0.5],[0.5,1]])
         c_xy = np.array([e_SQ.T@f for f in f_edge_b])*l_a
         c_z = np.ones([len(f_edge_b),1])*l_c*z
         c = np.hstack((c_xy,c_z))
@@ -206,8 +205,7 @@ def unitcell_SQ(origin, orientation, ratio_ca=np.sqrt((1+np.sqrt(3)/2)**2+0.5**2
     # yellow sites
     cSQ_ylw = []
     for z in [1/2]:
-        # f_edge_y = np.array([[0,0.5],[0.5,0.25],[0.5,0.75],[1,0.5]])
-        f_edge_y = np.array([[0,0.5],[0.5,0.5-1/np.sqrt(12)],[0.5,0.5+1/np.sqrt(12)],[1,0.5]])
+        f_edge_y = np.array([[0,0.5],[0.5,0.25],[0.5,0.75],[1,0.5]])
         c_xy = np.array([e_SQ.T@f for f in f_edge_y])*l_a
         c_z = np.ones([len(f_edge_y),1])*l_c*z
         c = np.hstack((c_xy,c_z))
@@ -652,144 +650,6 @@ def c_Z(nx,ny,Ratio_ca=1.9):
     
     return c_wht, c_blu, c_ylw
 
-# -------------------------------------------------
-# FK C14 phase
-def C14_hexunit():
-    """
-    Generates a layer of laves phase.
-    """
-    R_c = np.cos(np.pi/3)
-    R_s = np.sin(np.pi/3)
-    R = np.array([[R_c,-R_s,0],
-                    [R_s,R_c,0],
-                    [0,0,1]])
-
-    L = np.array([1,np.sqrt(3),np.sqrt(8/3)])
-
-    # Blue atoms
-    # layer A
-    c_0 = np.array([0,0,0])
-    c_1 = np.array([1,0,0])
-    c_2 = R@np.array([1,0,0])
-    c_3 = c_1+c_2
-    c_center = (c_0+c_1+c_2)/3
-    c_4 = (c_0-c_center)/2 + c_center + np.array([0,0,0.25])*np.sqrt(8/3)
-    c_5 = (c_1-c_center)/2 + c_center + np.array([0,0,0.25])*np.sqrt(8/3)
-    c_6 = (c_2-c_center)/2 + c_center + np.array([0,0,0.25])*np.sqrt(8/3)
-
-    # c_A0 = np.vstack((c_0,c_1,c_2,c_3))
-    c_A0 = c_0
-    c_A1 = np.vstack((c_4,c_5,c_6))
-
-    # layer B
-    c_sym = (c_1+c_2)/2 + np.array([0,0,0.25])*np.sqrt(8/3)
-    c_7 = 2*c_sym-c_4
-    c_8 = 2*c_sym-c_5
-    c_9 = 2*c_sym-c_6
-
-    # c_B0 = np.vstack((c_0,c_1,c_2,c_3)) + np.array([0,0,0.5])*np.sqrt(8/3)
-    c_B0 = c_0 + np.array([0,0,0.5])*np.sqrt(8/3)
-    c_B1 = np.vstack((c_7,c_8,c_9)) + np.array([0,0,0.5])*np.sqrt(8/3)
-
-
-    # yellow atoms
-    r_tetra = np.sqrt(3/8)
-    c_B_y0 = c_center + np.array([0,0,1])*(np.sqrt(8/3)*0.75 - r_tetra/2) 
-    c_B_y1 = c_center + np.array([0,0,1])*(np.sqrt(8/3)*0.75 + r_tetra/2)
-    c_A_y0 = 2*c_sym - c_center + np.array([0,0,1])*(-np.sqrt(8/3)*0.25 - r_tetra/2) 
-    c_A_y1 = 2*c_sym - c_center + np.array([0,0,1])*(-np.sqrt(8/3)*0.25 + r_tetra/2) 
-
-    c_A = np.vstack((c_A0,c_A1,c_A_y0,c_A_y1))
-    c_B = np.vstack((c_B0,c_B1,c_B_y0,c_B_y1))
-
-    c = np.vstack((c_A,c_B))
-
-    return c
-
-def C14_unit(origin, PBC=True):
-    R_c = np.cos(np.pi/3)
-    R_s = np.sin(np.pi/3)
-    R = np.array([[R_c,-R_s,0],
-                    [R_s,R_c,0],
-                    [0,0,1]])
-    c_0 = np.array([0,0,0])
-    c_1 = np.array([1,0,0])
-    c_2 = R@np.array([1,0,0])
-
-    c_hu_0 = C14_hexunit()
-    c_hu_1 = ((R@R)@(c_hu_0-c_2).T).T + c_2
-    c = np.vstack((c_hu_0,c_hu_1))
-
-    L = np.array([1,np.sqrt(3),np.sqrt(8/3)])
-    # c = uniq_coords(c)
-    c = c - np.floor(c/L)*L
-    c = uniq_coords(c) + origin
-
-    # if PBC:
-    #     sigma = 1e-6
-    #     i_c_0 = c[:,0]<L[0]-sigma
-    #     i_c_1 = c[:,1]<L[1]-sigma
-    #     i_c_2 = c[:,2]<L[2]-sigma
-    #     c = c[i_c_0*i_c_1*i_c_2, :]
-
-    return c
-
-def C14(nx,ny,nz):
-    shift_x = np.array([1,0,0])
-    shift_y = np.array([0,1,0])*np.sqrt(3)
-    shift_z = np.array([0,0,1])*np.sqrt(8/3)
-    c_unit_cells = []
-    for i in range(nx):
-        for j in range(ny):
-            for k in range(nz):
-                origin_ijk = shift_x*i+shift_y*j+shift_z*k
-                c_unit_cells.append(C14_unit(origin_ijk))
-    c = np.vstack(c_unit_cells)
-    
-    return c
-
-def C15_unit(origin, PBC=True):
-    # yellow sites
-    c_0 = np.array([0, 0, 0])
-    c_1 = np.array([0, 1, 1])/2
-    c_2 = np.array([1, 0, 1])/2
-    c_3 = np.array([1, 1, 0])/2
-
-    c_4 = (c_0+c_1+c_2+c_3)/4
-    c_5 = c_4 + c_1
-    c_6 = c_4 + c_2
-    c_7 = c_4 + c_3
-    c_ylw = np.vstack((c_0, c_1, c_2, c_3, c_4, c_5, c_6, c_7))
-
-    # blue sites
-    c_tetra = np.vstack((c_0, c_1, c_2, c_3))
-    c_b_tetra_1 = (c_tetra-c_4)/2 + np.array([1, 0, 0])/2 + c_4
-    c_b_tetra_2 = (c_tetra-c_4)/2 + np.array([0, 1, 0])/2 + c_4
-    c_b_tetra_3 = (c_tetra-c_4)/2 + np.array([0, 0, 1])/2 + c_4
-    c_b_tetra_4 = (c_tetra-c_4)/2 + np.array([1, 1, 1])/2 + c_4
-    c_blu = np.vstack((c_b_tetra_1, c_b_tetra_2, c_b_tetra_3, c_b_tetra_4))
-
-    c = np.vstack((c_ylw, c_blu))*np.sqrt(2) + origin
-
-    return c
-
-# -------------------------------------------------
-# FK C15 phase
-
-def C15(nx,ny,nz):
-    shift_x = np.array([1,0,0])*np.sqrt(2)
-    shift_y = np.array([0,1,0])*np.sqrt(2)
-    shift_z = np.array([0,0,1])*np.sqrt(2)
-    c_unit_cells = []
-    for i in range(nx):
-        for j in range(ny):
-            for k in range(nz):
-                origin_ijk = shift_x*i+shift_y*j+shift_z*k
-                c_unit_cells.append(C15_unit(origin_ijk))
-    c = np.vstack(c_unit_cells)
-    
-    return c
-
 # =================================================
 # Other structures
 def unitcell_FCC(origin=[0,0,0], orientation=0):
@@ -1097,7 +957,7 @@ def tile_Z(nx,ny,Ratio_ca=1.9):
 # =====================================================
 # Calculate S(Q)
 
-@njit
+# @njit
 def scatter_histo(c, qq, p_sub=1.0, n_bins=1000):
     """
     Calculate scattering function.
@@ -1132,48 +992,11 @@ def scatter_histo(c, qq, p_sub=1.0, n_bins=1000):
     
     for i_r in range(len(index_f)):
         rho_r[int(index_f[i_r])] += 1
+    
+#     for i_r in tqdm(range(n_bins)):
+#         rho_r[i_r] = np.sum(index_r_jk==i_r)
 
     S_q = np.array([np.sum(rho_r*np.sin(rr*q)/(rr*q)) for q in qq])/N + 1
-    
-    return S_q
-
-@njit
-def scatter_histo_window(c, qq, p_sub=1.0, n_bins=1000, rc=100):
-    """
-    Calculate scattering function.
-
-    Args:
-        c: N by 3 particle trajectory
-        qq: array
-            wave vectors
-        p_sub: amount of particles used to calculate S(Q)
-    """
-
-    N = c.shape[1]
-
-    # two-point correlation
-    n_list = int(N*p_sub)
-    i_list = np.random.choice(np.arange(N), size=n_list, replace=False)
-    r_jk = c[:,i_list].T.reshape(n_list,1,3) - c[:,i_list].T.reshape(1,n_list,3)
-    d_jk = np.sqrt(np.sum(r_jk**2,axis=2))
-    r_jk = None
-
-    # RDF
-    d_max = np.max(d_jk)
-    rr = np.linspace(d_max/n_bins,d_max,n_bins)
-    rho_r = np.zeros(n_bins)
-    
-    index_r_jk = np.floor(d_jk/d_max*n_bins) -1
-    d_jk = None
-    np.fill_diagonal(index_r_jk,n_bins*2) # we are not calculating these pairs
-    index_f = index_r_jk.flatten()
-    index_r_jk = None
-    index_f = index_f[index_f!=(n_bins*2)]
-    
-    for i_r in range(len(index_f)):
-        rho_r[int(index_f[i_r])] += 1
-    W = lambda r: np.sin(np.pi*r/rc)/(np.pi*r/rc)
-    S_q = np.array([np.sum(rho_r*np.sin(rr*q)/(rr*q)*W(rr)) for q in qq])/N + 1
     
     return S_q
 
