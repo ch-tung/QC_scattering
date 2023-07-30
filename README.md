@@ -1,4 +1,6 @@
 # QC_scattering
+
+## Scattering studies of BCP quasi crystals and Frank Kasper phases
  
 `test_GDM`: Example of generating the 2D quasiperiodic lattice using the Generalized Dual Method (GDM).
 ![](https://i.imgur.com/DRWoSEf.png)
