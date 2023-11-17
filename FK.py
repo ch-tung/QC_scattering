@@ -223,6 +223,68 @@ def unitcell_SQ(origin, orientation, ratio_ca=np.sqrt((1+np.sqrt(3)/2)**2+0.5**2
     
     return cSQ
 
+def unitcell_SQ_A15(origin, orientation, ratio_ca=np.sqrt((1+np.sqrt(3)/2)**2+0.5**2)):
+    '''
+    Generate rhombus unit cell
+    origin: origin of unitcell, 3*1 array
+    orientation: orientation of unitcell, 
+                 represented by polar angle of the long diagonl, float
+    
+    returns: cH = [cH_wht,cH_blu,cH_ylw], lists of coordinates of the 3 types of particles
+    '''
+    e_SQ = np.array([[np.cos(x),np.sin(x)] for x in [0,np.pi/2]])
+    e_TR = np.array([[np.cos(x),np.sin(x)] for x in [0,np.pi/3]])
+    l_c = 1*np.sqrt((1+np.sqrt(3)/2)**2+0.5**2)/ratio_ca
+    l_a = 1
+        
+    R = np.array([[np.cos(orientation),-np.sin(orientation),0],
+                  [np.sin(orientation), np.cos(orientation),0],
+                  [0,0,1]])
+
+    # place atoms
+    # white sites
+    cSQ_wht = []
+    for z in [1/4,3/4]:
+        f_edge_w = np.array([[0,0],[0,1],[1,0],[1,1]])
+        c_xy = np.array([e_SQ.T@f for f in f_edge_w])*l_a
+        c_z = np.ones([len(f_edge_w),1])*l_c*z
+        c = np.hstack((c_xy,c_z))
+        cSQ_wht.append(c)
+    cSQ_wht = np.array(cSQ_wht)
+    cSQ_wht = cSQ_wht.reshape([2*len(f_edge_w),3])
+
+    # blue sites
+    cSQ_blu = []
+    for z in [0,1]:
+        # f_edge_b = np.array([[0.5,0],[0.25,0.5],[0.75,0.5],[0.5,1]])
+        f_edge_b = np.array([[0.5,0],[0.25,0.5],[0.75,0.5],[0.5,1]])
+        c_xy = np.array([e_SQ.T@f for f in f_edge_b])*l_a
+        c_z = np.ones([len(f_edge_b),1])*l_c*z
+        c = np.hstack((c_xy,c_z))
+        cSQ_blu.append(c)
+    cSQ_blu = np.array(cSQ_blu)
+    cSQ_blu = cSQ_blu.reshape([2*len(f_edge_b),3])
+
+    # yellow sites
+    cSQ_ylw = []
+    for z in [1/2]:
+        # f_edge_y = np.array([[0,0.5],[0.5,0.25],[0.5,0.75],[1,0.5]])
+        f_edge_y = np.array([[0,0.5],[0.5,0.25],[0.5,0.75],[1,0.5]])
+        c_xy = np.array([e_SQ.T@f for f in f_edge_y])*l_a
+        c_z = np.ones([len(f_edge_y),1])*l_c*z
+        c = np.hstack((c_xy,c_z))
+        cSQ_ylw.append(c)
+    cSQ_ylw = np.array(cSQ_ylw)
+    cSQ_ylw = cSQ_ylw.reshape([1*len(f_edge_y),3])
+    
+    cSQ_wht = np.array([R@c for c in cSQ_wht])+origin
+    cSQ_blu = np.array([R@c for c in cSQ_blu])+origin
+    cSQ_ylw = np.array([R@c for c in cSQ_ylw])+origin
+    
+    cSQ = [cSQ_wht,cSQ_blu,cSQ_ylw]
+    
+    return cSQ
+
 # operations on unit cells
 def uniq_coords(coordinates,scale=50):
     id_coords = (np.round(coordinates*scale))
@@ -563,7 +625,7 @@ def c_sigma_B(nx,ny,Ratio_ca=1.9):
 # FK A15 phase
 
 def c_A15_unit(origin,Ratio_ca=1.9,PBC=False):
-    c_SQ1 = unitcell_SQ([0,0,0],0.0,ratio_ca=Ratio_ca)
+    c_SQ1 = unitcell_SQ_A15([0,0,0],0.0,ratio_ca=Ratio_ca)
     
     c_wht, c_blu, c_ylw = stack_coords([c_SQ1])
     
